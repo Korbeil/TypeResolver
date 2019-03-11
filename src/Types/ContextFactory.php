@@ -29,6 +29,8 @@ final class ContextFactory
     /** The literal used between sets of use statements */
     const T_LITERAL_USE_SEPARATOR = ',';
 
+    private $cached = [];
+
     /**
      * Build a Context given a Class Reflection.
      *
@@ -67,6 +69,11 @@ final class ContextFactory
     public function createForNamespace($namespace, $fileContents)
     {
         $namespace = trim($namespace, '\\');
+
+        if (isset($this->cached[$namespace])) {
+            return $this->cached[$namespace];
+        }
+
         $useStatements = [];
         $currentNamespace = '';
         $tokens = new \ArrayIterator(token_get_all($fileContents));
@@ -107,7 +114,9 @@ final class ContextFactory
             $tokens->next();
         }
 
-        return new Context($namespace, $useStatements);
+        $this->cached[$namespace] = new Context($namespace, $useStatements);
+
+        return $this->cached[$namespace];
     }
 
     /**
